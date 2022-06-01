@@ -32,7 +32,7 @@ async def on_startup(dispatcher):
 
 async def on_shutdown(dispatcher):
     await bot.delete_webhook()
-    await con.close() #close db
+    con.close() #close db
 
 #FSM
 class FSM(StatesGroup):
