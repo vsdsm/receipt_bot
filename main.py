@@ -11,6 +11,7 @@ from aiogram.utils.executor import start_webhook
 
 
 #base tokens
+storage = MemoryStorage()
 TOKEN = os.getenv('BOT_TOKEN')
 bot = Bot(token=TOKEN)
 dp = Dispatcher(bot, storage=storage)
@@ -61,8 +62,6 @@ class FSM(StatesGroup):
     link_e = State()
     choose_category_e = State()
 
-
-storage = MemoryStorage()
 
 # databases
 con = sq.connect('recipt_book.db')
