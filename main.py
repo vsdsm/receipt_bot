@@ -5,7 +5,35 @@ from aiogram.dispatcher import FSMContext  # с его помощью указы
 from aiogram.dispatcher.filters.state import State, StatesGroup  # импорт состояний
 from aiogram.dispatcher.filters import Text  # filter text
 import time
+import os
+import logging
+from aiogram.utils.executor import start_webhook
 
+
+#base tokens
+TOKEN = os.getenv('BOT_TOKEN')
+bot = Bot(token=TOKEN)
+dp = Dispatcher(bot, storage=storage)
+
+HEROKU_APP_NAME = os.getenv("HEROKU_APP_NAME")
+
+#setting up webhooks
+WEBHOOK_HOST = f"https://{HEROKU_APP_NAME}.herokuapp.com"
+WEBHOOK_PATH = f"/webhook/{TOKEN}"
+WEBHOOK_URL = f"{WEBHOOK_HOST}{WEBHOOK_PATH}"
+
+#webserver settings
+WEBAPP_HOST = '0.0.0.0'
+WEBAPP_PORT = os.getenv("PORT", default=8000)
+
+async def on_startup(dispatcher):
+    await bot.set_webhook(WEBHOOK_URL, drop_pending_updates=True)
+
+async def on_shutdown(dispatcher):
+    await bot.delete_webhook()
+    await con.close() #close db
+
+#FSM
 class FSM(StatesGroup):
     # states for reciepts
     name = State()
@@ -36,18 +64,12 @@ class FSM(StatesGroup):
 
 storage = MemoryStorage()
 
-token = '5215773798:AAHtndKMcTqODNVMxg8fiItX9Y_Xg8eIOqE'
-
 # databases
 con = sq.connect('recipt_book.db')
 cur = con.cursor()
 cur.execute('CREATE TABLE IF NOT EXISTS book(chat_id INTEGER, number INTEGER, name TEXT, description TEXT, link TEXT, category TEXT)')
 cur.execute('CREATE TABLE IF NOT EXISTS categories(chat_id INTEGER, category TEXT)')
 cur.execute('CREATE TABLE IF NOT EXISTS notes(chat_id INTEGER, number INTEGER, note TEXT, date TEXT)')
-
-bot = Bot(token=token)
-
-dp = Dispatcher(bot, storage=storage)
 
 # base keyboard
 async def base_menu(message):
@@ -635,5 +657,15 @@ async def cancel_handler(message: types.Message, state: FSMContext):
     await state.finish()
 
 if __name__ == "__main__":
-    executor.start_polling(dp, skip_updates=True)
-    con.close()
+    logging.basicConfig(level=logging.INFO)
+    start_webhook(dispatcher=dp,
+                  webhook_path=WEBHOOK_PATH,
+                  skip_updates=True,
+                  on_startup=on_startup,
+                  on_shutdown=on_shutdown,
+                  host=WEBAPP_HOST,
+                  port=WEBAPP_PORT
+                  )
+
+    # executor.start_polling(dp, skip_updates=True)
+    # con.close()
