@@ -32,7 +32,7 @@ async def on_startup(dispatcher):
 
 async def on_shutdown(dispatcher):
     await bot.delete_webhook()
-    con.close() #close db
+    # con.close() #close db
 
 #FSM
 class FSM(StatesGroup):
@@ -667,4 +667,4 @@ if __name__ == "__main__":
                   )
 
     # executor.start_polling(dp, skip_updates=True)
-    # con.close()
+    con.close()
