@@ -1,1 +1,1 @@
-# receipt_bot
+Telegram bot for cooking recipes.
